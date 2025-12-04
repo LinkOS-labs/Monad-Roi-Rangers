@@ -1,173 +1,187 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Mint – Monad Roi Rangers</title>
-<script src="https://cdn.jsdelivr.net/npm/ethers@6.12.0/dist/ethers.umd.min.js"></script>
-
-<style>
-body {
-  margin:0; padding:0;
-  font-family:Arial, sans-serif;
-  background: #0a0e0a;
-  color:#e6f5d0;
-}
-
-/* simple camouflage */
-.bg {
-  background:
-    radial-gradient(circle at 20% 30%, rgba(40,60,30,0.7), transparent 60%),
-    radial-gradient(circle at 80% 0%, rgba(60,80,50,0.6), transparent 55%),
-    radial-gradient(circle at 0% 80%, rgba(30,40,20,0.7), transparent 50%),
-    linear-gradient(#0a0e0a,#141a12);
-  min-height:100vh;
-  padding:20px;
-}
-
-.card {
-  background:rgba(5,8,5,0.85);
-  border:1px solid rgba(190,255,120,0.3);
-  padding:20px;
-  max-width:400px;
-  margin:40px auto;
-  border-radius:15px;
-}
-
-.btn {
-  width:100%;
-  padding:12px;
-  margin-top:10px;
-  border-radius:10px;
-  border:1px solid #c8f76e;
-  background:#c8f76e;
-  color:#122000;
-  font-weight:bold;
-  cursor:pointer;
-}
-
-.btn2 {
-  width:100%;
-  padding:12px;
-  margin-top:10px;
-  border-radius:10px;
-  border:1px solid #c8f76e;
-  background:transparent;
-  color:#c8f76e;
-  cursor:pointer;
-}
-
-input {
-  width:100%;
-  margin-top:10px;
-  padding:10px;
-  border-radius:8px;
-  border:1px solid #c8f76e;
-  background:#0d120d;
-  color:white;
-}
-
-#status {
-  margin-top:15px;
-  white-space:pre-line;
-  font-size:14px;
-}
-</style>
+  <meta charset="UTF-8">
+  <title>Mint MONAD ROI RANGERS</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.12.0/dist/ethers.umd.min.js"></script>
 </head>
-
 <body>
-<div class="bg">
-  <div class="card">
-    <h2 style="text-align:center;">MONAD ROI RANGERS</h2>
-    <p style="text-align:center;">Mint price: <b>5 MONAD</b></p>
+<div class="page-wrapper">
 
-    <input type="number" id="qty" min="1" max="20" value="1">
+  <header class="navbar">
+    <div class="nav-left">
+      <div class="logo-dot"></div>
+      <div>
+        <div class="nav-title">MONAD ROI RANGERS</div>
+        <div class="nav-sub">Public Mint</div>
+      </div>
+    </div>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="mint.html">Mint</a>
+    </nav>
+  </header>
 
-    <button id="connectBtn" class="btn">Connect Wallet</button>
-    <button id="mintBtn" class="btn2" disabled>Mint</button>
+  <main>
+    <section class="section">
+      <h2 class="section-title">Mint MONAD ROI RANGERS</h2>
+      <p class="section-sub">
+        Connect any EVM wallet on Monad and mint straight from this page.
+        Mint price: <strong>5 MONAD</strong> per Ranger.
+      </p>
 
-    <div id="status">Status: Idle</div>
-  </div>
+      <div id="supply" class="supply" style="text-align:center;margin-bottom:18px;">
+        Loading supply…
+      </div>
+
+      <div class="mint-card-outer">
+        <div class="mint-card">
+          <div class="mint-label">Quantity</div>
+          <input type="number" id="qty" class="mint-input" min="1" max="20" value="1">
+
+          <div style="margin-top:18px;">
+            <button id="connectBtn" class="btn-primary" style="width:100%;margin-bottom:8px;">
+              Connect Wallet
+            </button>
+            <button id="mintBtn" class="btn-outline" style="width:100%;" disabled>
+              Mint
+            </button>
+          </div>
+
+          <div id="status" class="status" style="margin-top:14px;">
+            Status: Idle
+          </div>
+        </div>
+      </div>
+
+      <div class="opensea-box">
+        <div style="font-size:13px; text-transform:uppercase; letter-spacing:0.14em; margin-bottom:6px;">
+          View the collection on OpenSea
+        </div>
+        <a href="https://opensea.io/collection/monad-roi-rangers" target="_blank">
+          https://opensea.io/collection/monad-roi-rangers
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div>
+      Mint live on Monad · Contract:
+      <a href="https://monadscan.com/address/0xF81737682eBD3B51F44c4321a67305F90B73D622"
+         target="_blank">
+        0xF817...D622
+      </a>
+    </div>
+    <div>
+      Twitter: <a href="https://twitter.com/apunkalypsenow" target="_blank">@apunkalypsenow</a>
+    </div>
+  </footer>
+
 </div>
 
-
 <script>
-const CONTRACT = "0xF81737682eBD3B51F44c4321a67305F90B73D622";
-const RPC = "https://rpc.monad.xyz";
+const CONTRACT_ADDRESS = "0xF81737682eBD3B51F44c4321a67305F90B73D622";
+const RPC_URL = "https://rpc.monad.xyz";
 
 const ABI = [
-  "function mint(uint256 quantity) external payable"
+  "function mint(uint256 quantity) external payable",
+  "function MINT_PRICE() view returns (uint256)",
+  "function totalMinted() view returns (uint256)",
+  "function MAX_SUPPLY() view returns (uint256)"
 ];
 
-/* EXACT provider-detection from your working sample */
-function getInjected() {
+function log(msg) {
+  document.getElementById("status").textContent = msg;
+}
+
+function getAnyProvider() {
   if (window.ethereum && Array.isArray(window.ethereum.providers)) {
-    const p = window.ethereum.providers;
-    return p.find(x => x.isMetaMask) ||
-           p.find(x => x.isPhantom) ||
-           p[0];
+    const list = window.ethereum.providers;
+    const mm = list.find(p => p.isMetaMask);
+    if (mm) return mm;
+    const ph = list.find(p => p.isPhantom);
+    if (ph) return ph;
+    return list[0];
   }
   if (window.phantom && window.phantom.ethereum) return window.phantom.ethereum;
   if (window.ethereum) return window.ethereum;
   return null;
 }
 
-let provider, signer, contract;
+// supply
+(async () => {
+  try {
+    const rpc = new ethers.JsonRpcProvider(RPC_URL);
+    const readC = new ethers.Contract(CONTRACT_ADDRESS, ABI, rpc);
+    const minted = await readC.totalMinted();
+    const max = await readC.MAX_SUPPLY();
+    document.getElementById("supply").textContent =
+      `Minted: ${minted.toString()} / ${max.toString()}`;
+  } catch (e) {
+    document.getElementById("supply").textContent = "Minted: ? / ?";
+  }
+})();
 
-function log(msg){
-  document.getElementById("status").innerText = msg;
-}
+let provider, signer, contract;
 
 document.getElementById("connectBtn").onclick = async () => {
   try {
-    const injected = getInjected();
+    const injected = getAnyProvider();
     if (!injected) {
-      log("⚠ No EVM wallet detected");
+      log("⚠ No EVM wallet detected. Use MetaMask, Phantom, Coinbase, etc.");
       return;
     }
+    const accounts = await injected.request({ method: "eth_requestAccounts" });
+    const wallet = accounts[0];
 
-    const acc = await injected.request({ method: "eth_requestAccounts" });
     provider = new ethers.BrowserProvider(injected);
     signer = await provider.getSigner();
-    contract = new ethers.Contract(CONTRACT, ABI, signer);
+    contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
 
-    log("Connected: " + acc[0]);
+    let chainInfo = "";
+    try {
+      const net = await provider.getNetwork();
+      chainInfo = `\nChainId detected: ${net.chainId.toString()}`;
+    } catch (_) {}
+
+    log(`✅ Connected: ${wallet}${chainInfo}\nReady to mint.`);
     document.getElementById("mintBtn").disabled = false;
-
-  } catch(e){
-    log("Connect error:\n" + e.message);
+  } catch (err) {
+    log("❌ Connect error:\n" + (err.message || err));
   }
 };
 
 document.getElementById("mintBtn").onclick = async () => {
   try {
     if (!contract) {
-      log("Connect wallet first");
+      log("Connect wallet first.");
       return;
     }
 
     const qty = parseInt(document.getElementById("qty").value);
     if (!qty || qty < 1) {
-      log("Invalid quantity");
+      log("Enter a valid quantity.");
       return;
     }
 
-    // FIXED: calculate total cost manually — no MINT_PRICE()
-    const totalCost = ethers.parseEther((5 * qty).toString());
+    const price = await contract.MINT_PRICE();
+    const totalCost = price * BigInt(qty);
 
-    log("Sending mint…");
+    log("⏳ Sending mint transaction…");
 
     const tx = await contract.mint(qty, {
       value: totalCost,
       gasLimit: 250000n * BigInt(qty)
     });
 
-    log("Waiting for confirmation…\n" + tx.hash);
-
-    const r = await tx.wait();
-    log("✅ Minted!\nTx: " + r.hash);
-
-  } catch(e){
-    log("Mint error:\n" + (e.reason || e.message));
+    log("⏳ Waiting for confirmation…\nTx: " + tx.hash);
+    const receipt = await tx.wait();
+    log("✅ Mint confirmed!\nTx: " + receipt.hash);
+  } catch (err) {
+    log("❌ Mint error:\n" + (err.reason || err.message || err));
   }
 };
 </script>
