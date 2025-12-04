@@ -33,7 +33,7 @@
       </p>
 
       <div id="supply" class="supply" style="text-align:center;margin-bottom:18px;">
-        Loading supply…
+        Minted: ? / ?
       </div>
 
       <div class="mint-card-outer">
@@ -87,10 +87,7 @@ const CONTRACT_ADDRESS = "0xF81737682eBD3B51F44c4321a67305F90B73D622";
 const RPC_URL = "https://rpc.monad.xyz";
 
 const ABI = [
-  "function mint(uint256 quantity) external payable",
-  "function MINT_PRICE() view returns (uint256)",
-  "function totalMinted() view returns (uint256)",
-  "function MAX_SUPPLY() view returns (uint256)"
+  "function mint(uint256 quantity) external payable"
 ];
 
 function log(msg) {
@@ -111,29 +108,16 @@ function getAnyProvider() {
   return null;
 }
 
-// supply
-(async () => {
-  try {
-    const rpc = new ethers.JsonRpcProvider(RPC_URL);
-    const readC = new ethers.Contract(CONTRACT_ADDRESS, ABI, rpc);
-    const minted = await readC.totalMinted();
-    const max = await readC.MAX_SUPPLY();
-    document.getElementById("supply").textContent =
-      `Minted: ${minted.toString()} / ${max.toString()}`;
-  } catch (e) {
-    document.getElementById("supply").textContent = "Minted: ? / ?";
-  }
-})();
-
 let provider, signer, contract;
 
 document.getElementById("connectBtn").onclick = async () => {
   try {
     const injected = getAnyProvider();
     if (!injected) {
-      log("⚠ No EVM wallet detected. Use MetaMask, Phantom, Coinbase, etc.");
+      log("No EVM wallet detected.");
       return;
     }
+
     const accounts = await injected.request({ method: "eth_requestAccounts" });
     const wallet = accounts[0];
 
@@ -141,16 +125,11 @@ document.getElementById("connectBtn").onclick = async () => {
     signer = await provider.getSigner();
     contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
 
-    let chainInfo = "";
-    try {
-      const net = await provider.getNetwork();
-      chainInfo = `\nChainId detected: ${net.chainId.toString()}`;
-    } catch (_) {}
-
-    log(`✅ Connected: ${wallet}${chainInfo}\nReady to mint.`);
+    log(`Connected: ${wallet}`);
     document.getElementById("mintBtn").disabled = false;
+
   } catch (err) {
-    log("❌ Connect error:\n" + (err.message || err));
+    log("Connect error:\n" + (err.message || err));
   }
 };
 
@@ -163,28 +142,32 @@ document.getElementById("mintBtn").onclick = async () => {
 
     const qty = parseInt(document.getElementById("qty").value);
     if (!qty || qty < 1) {
-      log("Enter a valid quantity.");
+      log("Invalid quantity.");
       return;
     }
 
-    const price = await contract.MINT_PRICE();
-    const totalCost = price * BigInt(qty);
+    // FIX: No MINT_PRICE() call → manual set 5 MONAD per NFT
+    const pricePer = ethers.parseEther("5");
+    const totalCost = pricePer * BigInt(qty);
 
-    log("⏳ Sending mint transaction…");
+    log("Sending mint…");
 
     const tx = await contract.mint(qty, {
       value: totalCost,
       gasLimit: 250000n * BigInt(qty)
     });
 
-    log("⏳ Waiting for confirmation…\nTx: " + tx.hash);
+    log("Waiting for confirmation…\n" + tx.hash);
+
     const receipt = await tx.wait();
-    log("✅ Mint confirmed!\nTx: " + receipt.hash);
+    log("Mint confirmed!\nTx: " + receipt.hash);
+
   } catch (err) {
-    log("❌ Mint error:\n" + (err.reason || err.message || err));
+    log("Mint error:\n" + (err.reason || err.message || err));
   }
 };
 </script>
 
 </body>
 </html>
+
